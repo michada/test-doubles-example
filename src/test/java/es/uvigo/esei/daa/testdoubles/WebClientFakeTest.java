@@ -15,11 +15,9 @@
  */
 package es.uvigo.esei.daa.testdoubles;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,9 +31,6 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
-
-import es.uvigo.esei.daa.testdoubles.WebClient;
 
 /**
  * En este caso, los test se hacen utilizando un servidor real. Concretamente,
@@ -49,9 +44,7 @@ import es.uvigo.esei.daa.testdoubles.WebClient;
  * @author Miguel Reboiro Jato
  * @see http://download.eclipse.org/jetty/stable-9/apidocs/
  */
-public class WebClientFakeTest {
-	private WebClient client;
-	
+public class WebClientFakeTest extends WebClientTest {
 	private String helloWorldURL;
 	private String errorURL;
 	
@@ -74,34 +67,35 @@ public class WebClientFakeTest {
 		this.helloWorldURL = "http://localhost:8888/helloworld";
 		this.errorURL = "http://localhost:8888/missing";
 	}
+	
+	@Override
+	protected URL getHelloWorldUrl() {
+		try {
+			return new URL(this.helloWorldURL);
+		} catch (MalformedURLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	@Override
+	protected URL getErrorUrl() {
+		try {
+			return new URL(this.errorURL);
+		} catch (MalformedURLException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
 	@After
 	public void tearDown() throws Exception {
 		this.server.stop();
-	}
-
-	@Test
-	public final void testHelloWorld() throws IOException {
-		final URL url = new URL(this.helloWorldURL);
-		
-		assertEquals(
-			"Hello World",
-			this.client.getContent(url)
-		);
-	}
-	
-	@Test(expected = FileNotFoundException.class)
-	public final void testError() throws IOException {
-		final URL url = new URL(this.errorURL);
-		
-		this.client.getContent(url);
 	}
 	
 	private static final class SimpleHandler extends AbstractHandler {
 		private final Map<String, String> mapping;
 		
 		public SimpleHandler() {
-			this.mapping = new HashMap<String, String>();
+			this.mapping = new HashMap<>();
 		}
 		
 		public void addMapping(String key, String content) {

@@ -16,7 +16,6 @@
 package es.uvigo.esei.daa.testdoubles;
 
 import static org.easymock.EasyMock.expect;
-import static org.junit.Assert.assertEquals;
 import static org.powermock.api.easymock.PowerMock.createMock;
 import static org.powermock.api.easymock.PowerMock.replay;
 import static org.powermock.api.easymock.PowerMock.verify;
@@ -28,12 +27,9 @@ import java.net.URL;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
-
-import es.uvigo.esei.daa.testdoubles.WebClient;
 
 /**
  * En este caso, los tests se hacen usando un mock de URL que nos permite
@@ -48,15 +44,11 @@ import es.uvigo.esei.daa.testdoubles.WebClient;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(WebClient.class)
-public class WebClientMockTest {
-	private WebClient client;
-	
+public class WebClientMockTest extends WebClientTest {
 	private URL mockURL;
 	
 	@Before
 	public void setUp() throws Exception {
-		this.client = new WebClient();
-		
 		// Creación del mock de URL
 		this.mockURL = createMock(URL.class);
 	}
@@ -65,27 +57,32 @@ public class WebClientMockTest {
 	public void tearDown() throws Exception {
 		verify(this.mockURL);
 	}
-
-	@Test
-	public final void testHelloWorld() throws IOException {
-		expect(this.mockURL.openStream())
-			.andReturn(new ByteArrayInputStream("Hello World".getBytes()));
-		
-		replay(this.mockURL);
-		
-		assertEquals(
-			"Hello World",
-			this.client.getContent(this.mockURL)
-		);
+	
+	@Override
+	protected URL getHelloWorldUrl() {
+		try {
+			expect(this.mockURL.openStream())
+				.andReturn(new ByteArrayInputStream("Hello World".getBytes()));
+			
+			replay(this.mockURL);
+			
+			return this.mockURL;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
-	@Test(expected = FileNotFoundException.class)
-	public final void testError() throws IOException {
-		expect(this.mockURL.openStream())
+	@Override
+	protected URL getErrorUrl() {
+		try {
+			expect(this.mockURL.openStream())
 			.andThrow(new FileNotFoundException());
 		
-		replay(this.mockURL);
-		
-		this.client.getContent(this.mockURL);
+			replay(this.mockURL);
+			
+			return this.mockURL;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }
